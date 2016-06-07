@@ -1,0 +1,13 @@
+machine:
+  services:
+    - docker
+    - redis
+
+dependencies:
+  pre:
+    - docker run -d -p 4222:4222 nats
+    - make dev-deps
+
+test:
+  override:
+    - make test
