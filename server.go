@@ -11,6 +11,7 @@ import (
 	"os/exec"
 	"runtime"
 
+	ecc "github.com/ernestio/ernest-config-client"
 	"github.com/nats-io/nats"
 )
 
@@ -23,11 +24,7 @@ var nc *nats.Conn
 var natsErr error
 
 func connect(uri string) {
-	nc, natsErr = nats.Connect(uri)
-	if natsErr != nil {
-		log.Println("ERROR: could not connect to NATS server")
-		log.Panic(natsErr)
-	}
+	nc = ecc.NewConfig(os.Getenv("NATS_URI")).Nats()
 }
 
 func process(cmd string, args []string) {
