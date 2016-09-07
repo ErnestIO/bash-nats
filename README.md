@@ -4,7 +4,7 @@ Bash nats is a layer built in top of go, to allow bash commands manage nats comm
 
 ## Build status
 
-* master:  [![CircleCI](https://circleci.com/gh/ErnestIO/bash-nats/tree/master.svg?style=svg)](https://circleci.com/gh/ErnestIO/bash-nats/tree/master)
+* master:  [![CircleCI](https://circleci.com/gh/ernestio/bash-nats/tree/master.svg?style=svg)](https://circleci.com/gh/ernestio/bash-nats/tree/master)
 
 ## Installation
 
