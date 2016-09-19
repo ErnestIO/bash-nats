@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/exec"
 	"runtime"
+	"strings"
 
 	ecc "github.com/ernestio/ernest-config-client"
 	"github.com/nats-io/nats"
@@ -84,10 +85,12 @@ func main() {
 		natsURL = nats.DefaultURL
 	}
 
-	subject := os.Args[1]
+	subjects := os.Args[1]
 	cmdName := os.Args[2]
 	args := []string{os.Args[3]}
 
 	connect(natsURL)
-	subscriber(subject, cmdName, args)
+	for _, subject := range strings.Split(subjects, ",") {
+		subscriber(subject, cmdName, args)
+	}
 }
