@@ -73,7 +73,6 @@ func subscriber(subject string, cmd string, args []string) {
 			go process(cmd, cmdArgs)
 		}
 	})
-	runtime.Goexit()
 }
 
 func main() {
@@ -93,4 +92,6 @@ func main() {
 	for _, subject := range strings.Split(subjects, ",") {
 		subscriber(subject, cmdName, args)
 	}
+
+	runtime.Goexit()
 }
