@@ -28,6 +28,12 @@ So, a real example can look like:
 bash-nats create-instance jruby adapter.rb
 ```
 
+Bash nats can also have multiple subscriptions by comma delimiting subjects, like so:
+
+```
+bash-nats create-instance,update-instance jruby adapter.rb
+```
+
 ## Running Tests
 
 ```
