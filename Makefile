@@ -5,18 +5,18 @@ build:
 	go build -v ./...
 
 lint:
-	golint ./...
-	go vet ./...
+	gometalinter
 
 test:
 	go test -v ./... --cover
 
-deps: dev-deps
-	go get -u github.com/nats-io/nats
-	go get -u github.com/ernestio/ernest-config-client
+deps:
+	go get github.com/nats-io/nats
+	go get github.com/ernestio/ernest-config-client
+	go get golang.org/x/crypto/pbkdf2
 
-dev-deps:
-	go get -u github.com/golang/lint/golint
+dev-deps: deps
+	go get github.com/alecthomas/gometalinter
 
 clean:
 	go clean

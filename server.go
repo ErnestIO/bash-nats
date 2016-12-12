@@ -6,19 +6,24 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
 	"runtime"
 	"strings"
 
+	aes "github.com/ernestio/crypto/aes"
 	ecc "github.com/ernestio/ernest-config-client"
 	"github.com/nats-io/nats"
 )
 
 // Message is used to exract the type from an event
 type Message struct {
-	Type string `json:"type"`
+	Type     string `json:"type"`
+	Username string `json:"datacenter_username"`
+	Password string `json:"datacenter_password"`
 }
 
 var nc *nats.Conn
@@ -29,40 +34,54 @@ func connect(uri string) {
 }
 
 func process(cmd string, args []string) {
-	var (
-		cmdOut []byte
-		err    error
-	)
+	var err error
 
 	input := Message{}
 	if err = json.Unmarshal([]byte(args[2]), &input); err != nil {
-		log.Println("ERROR : " + args[2])
+		log.Println("ERROR(1) : " + args[2])
 		return
 	}
 
 	log.Println("PROCESSING : " + args[2])
-	if cmdOut, err = exec.Command(cmd, args...).Output(); err != nil {
-		log.Println("ERROR : " + err.Error())
+	cm := exec.Command(cmd, args...)
+	crypto := aes.New()
+	key := os.Getenv("ERNEST_CRYPTO_KEY")
+	if key != "" {
+		usr, _ := crypto.Decrypt(input.Username, key)
+		pwd, _ := crypto.Decrypt(input.Password, key)
+		env := os.Environ()
+		env = append(env, fmt.Sprintf("DT_USR=%s", usr))
+		env = append(env, fmt.Sprintf("DT_PWD=%s", pwd))
+		cm.Env = env
+	}
+
+	cmdOut, _ := cm.StdoutPipe()
+
+	if err := cm.Start(); err != nil {
+		log.Println("ERROR(2) : " + err.Error())
+		println(err)
 		return
 	}
+	stdOutput, _ := ioutil.ReadAll(cmdOut)
+
 	output := Message{}
-	if err := json.Unmarshal(cmdOut, &output); err != nil {
-		log.Println("ERROR : " + string(cmdOut))
+	if err := json.Unmarshal(stdOutput, &output); err != nil {
+		log.Println("ERROR(3) : " + string(stdOutput))
 		return
 	}
 
 	log.Println("FINISHED : Sending " + output.Type)
 	if input.Type != output.Type {
-		nc.Publish(output.Type, cmdOut)
+		_ = nc.Publish(output.Type, stdOutput)
 	} else {
-		log.Println("ERROR : Output and input messages are equals")
+		log.Println("ERROR(4) : Output and input messages are equals")
 		return
 	}
 
 }
 
 func subscriber(subject string, cmd string, args []string) {
-	nc.Subscribe(subject, func(m *nats.Msg) {
+	_, _ = nc.Subscribe(subject, func(m *nats.Msg) {
 		cmdArgs := args
 		cmdArgs = append(cmdArgs, subject)
 		cmdArgs = append(cmdArgs, string(m.Data))
